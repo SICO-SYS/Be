@@ -15,9 +15,9 @@ import (
 	// "sort"
 	// "strings"
 
-	"github.com/SiCo-DevOps/Pb"
-	"github.com/SiCo-DevOps/dao/mongo"
-	// "github.com/SiCo-DevOps/public"
+	"github.com/SiCo-Ops/Pb"
+	"github.com/SiCo-Ops/dao/mongo"
+	// "github.com/SiCo-Ops/public"
 )
 
 func (a *Asset) AssetTemplate(ctx context.Context, in *pb.Asset_Req) (*pb.Asset_Res, error) {

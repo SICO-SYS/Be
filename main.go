@@ -11,8 +11,8 @@ package main
 import (
 	"net"
 
-	"github.com/SiCo-DevOps/Be/controller"
-	"github.com/SiCo-DevOps/cfg"
+	"github.com/SiCo-Ops/Be/controller"
+	"github.com/SiCo-Ops/cfg"
 )
 
 func Run() {
