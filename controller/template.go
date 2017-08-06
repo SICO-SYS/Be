@@ -21,12 +21,12 @@ import (
 )
 
 func (a *Asset) AssetTemplate(ctx context.Context, in *pb.Asset_Req) (*pb.Asset_Res, error) {
-	c := "asset.template." + in.Id
-	data := make(map[string]string)
+	c := "asset." + in.Id + ".template"
+	data := make(map[string]interface{})
 	data["name"] = in.Name
-	for key, value := range in.Param {
-		data[key] = value
-	}
+	param := []map[string]string{in.Param}
+	data["param"] = param
+	mongo.Asset_ensureIndexes(in.Id)
 	ok := mongo.Mgo_Insert(mongo.MgoAssetConn, data, c)
 	if ok {
 		return &pb.Asset_Res{0}, nil
@@ -34,5 +34,6 @@ func (a *Asset) AssetTemplate(ctx context.Context, in *pb.Asset_Req) (*pb.Asset_
 	return &pb.Asset_Res{1}, nil
 }
 
-// func init() {
-// }
+func (a *Asset) AssetStorein(ctx context.Context, in *pb.Asset_CloudReq) (*pb.Asset_Res, error) {
+	return &pb.Asset_Res{}, nil
+}
