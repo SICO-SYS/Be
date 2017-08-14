@@ -20,20 +20,16 @@ import (
 	// "github.com/SiCo-Ops/public"
 )
 
-func (a *Asset) AssetTemplate(ctx context.Context, in *pb.Asset_Req) (*pb.Asset_Res, error) {
-	c := "asset." + in.Id + ".template"
+func (a *AssetService) CreateTemplateRPC(ctx context.Context, in *pb.AssetTemplateCall) (*pb.AssetMsgBack, error) {
+	c := "template." + in.Id
 	data := make(map[string]interface{})
 	data["name"] = in.Name
 	param := []map[string]string{in.Param}
 	data["param"] = param
-	mongo.Asset_ensureIndexes(in.Id)
-	ok := mongo.Mgo_Insert(mongo.MgoAssetConn, data, c)
+	mongo.AssetEnsureIndexes(in.Id)
+	ok := mongo.MgoInsert(mongo.MgoAssetConn, data, c)
 	if ok {
-		return &pb.Asset_Res{0}, nil
+		return &pb.AssetMsgBack{Code: 0}, nil
 	}
-	return &pb.Asset_Res{1}, nil
-}
-
-func (a *Asset) AssetStorein(ctx context.Context, in *pb.Asset_CloudReq) (*pb.Asset_Res, error) {
-	return &pb.Asset_Res{}, nil
+	return &pb.AssetMsgBack{Code: 1}, nil
 }

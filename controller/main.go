@@ -15,15 +15,14 @@ import (
 )
 
 var (
-	S   = grpc.NewServer()
-	err error
+	RPCServer = grpc.NewServer()
 )
 
-type Asset struct{}
+type AssetService struct{}
 
 func init() {
 	defer func() {
 		recover()
 	}()
-	pb.RegisterAseetServer(S, &Asset{})
+	pb.RegisterAssetServiceServer(RPCServer, &AssetService{})
 }
