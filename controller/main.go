@@ -13,9 +13,11 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/SiCo-Ops/Pb"
+	"github.com/SiCo-Ops/cfg"
 )
 
 var (
+	config    = cfg.Config
 	RPCServer = grpc.NewServer()
 )
 
