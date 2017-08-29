@@ -28,8 +28,8 @@ func (t *TemplateService) CreateRPC(ctx context.Context, in *pb.AssetTemplateCal
 	data["name"] = in.Name
 	param := []map[string]string{in.Param}
 	data["param"] = param
-	mongo.AssetEnsureIndexes(in.Id)
-	ok := mongo.MgoInsert(mongo.MgoAssetConn, data, c)
+	mongo.TemplateEnsureIndexes(in.Id)
+	ok := mongo.Insert(mongo.AssetConn, data, c)
 	if ok {
 		return &pb.AssetMsgBack{Code: 0}, nil
 	}
