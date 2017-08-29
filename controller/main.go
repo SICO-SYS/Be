@@ -21,13 +21,12 @@ var (
 	RPCServer = grpc.NewServer()
 )
 
-type AssetService struct{}
-
 func init() {
 	defer func() {
 		recover()
 	}()
 	pb.RegisterAssetServiceServer(RPCServer, &AssetService{})
+	pb.RegisterTemplateServiceServer(RPCServer, &TemplateService{})
 
 	if config.Sentry.Enable {
 		raven.SetDSN(config.Sentry.DSN)

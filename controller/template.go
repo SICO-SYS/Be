@@ -20,7 +20,9 @@ import (
 	// "github.com/SiCo-Ops/public"
 )
 
-func (a *AssetService) CreateTemplateRPC(ctx context.Context, in *pb.AssetTemplateCall) (*pb.AssetMsgBack, error) {
+type TemplateService struct{}
+
+func (t *TemplateService) CreateRPC(ctx context.Context, in *pb.AssetTemplateCall) (*pb.AssetMsgBack, error) {
 	c := "template." + in.Id
 	data := make(map[string]interface{})
 	data["name"] = in.Name
