@@ -32,9 +32,9 @@ func (a *AssetService) SynchronizeRPC(ctx context.Context, in *pb.AssetSynchroni
 		}
 		return &pb.AssetMsgBack{Code: 0, Msg: public.Int642String(v.Response.TotalCount)}, nil
 	default:
-		return &pb.AssetMsgBack{Code: -1}
+		return &pb.AssetMsgBack{Code: -1}, nil
 	}
-	return &pb.AssetMsgBack{Code: -1}
+	return &pb.AssetMsgBack{Code: -1}, nil
 }
 
 func (a *AssetService) CustomRPC(ctx context.Context, in *pb.AssetCustomCall) (*pb.AssetMsgBack, error) {
