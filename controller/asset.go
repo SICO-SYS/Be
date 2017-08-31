@@ -13,6 +13,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/SiCo-Ops/Pb"
+	"github.com/SiCo-Ops/cloud-go-sdk/aliyun"
 	"github.com/SiCo-Ops/cloud-go-sdk/qcloud"
 	"github.com/SiCo-Ops/dao/mongo"
 	"github.com/SiCo-Ops/public"
@@ -21,16 +22,33 @@ import (
 type AssetService struct{}
 
 func (a *AssetService) SynchronizeRPC(ctx context.Context, in *pb.AssetSynchronizeCall) (*pb.AssetMsgBack, error) {
+	collection := mongo.CollectionAssetCloudName(in.Cloud, in.Id)
+	mongo.Remove(mongo.AssetConn, collection)
 	switch in.Cloud {
 	case "qcloud":
-		v := &qcloudSDK.CVM{}
-		json.Unmarshal(in.Data, v)
-		collection := mongo.CollectionAssetCloudName(in.Cloud, in.Id)
-		mongo.Remove(mongo.AssetConn, collection)
-		for _, cloudResource := range v.Response.InstanceSet {
-			mongo.Insert(mongo.AssetConn, cloudResource, collection)
+		switch in.Service {
+		case "cvm":
+			v := &qcloudSDK.CVM{}
+			json.Unmarshal(in.Data, v)
+			for _, cloudResource := range v.Response.InstanceSet {
+				mongo.Insert(mongo.AssetConn, cloudResource, collection)
+			}
+			return &pb.AssetMsgBack{Code: 0, Msg: public.Int642String(v.Response.TotalCount)}, nil
+		default:
+			return &pb.AssetMsgBack{Code: -1}, nil
 		}
-		return &pb.AssetMsgBack{Code: 0, Msg: public.Int642String(v.Response.TotalCount)}, nil
+	case "aliyun":
+		switch in.Service {
+		case "ecs":
+			v := &aliyunSDK.Aliyun{}
+			json.Unmarshal(in.Data, v)
+			for _, cloudResource := range v.Instances.Instance {
+				mongo.Insert(mongo.AssetConn, cloudResource, collection)
+			}
+			return &pb.AssetMsgBack{Code: 0, Msg: public.Int642String(v.TotalCount)}, nil
+		default:
+			return &pb.AssetMsgBack{Code: -1}, nil
+		}
 	default:
 		return &pb.AssetMsgBack{Code: -1}, nil
 	}
