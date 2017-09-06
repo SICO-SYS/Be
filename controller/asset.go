@@ -10,10 +10,12 @@ package controller
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"golang.org/x/net/context"
 
 	"github.com/SiCo-Ops/Pb"
 	"github.com/SiCo-Ops/cloud-go-sdk/aliyun"
+	"github.com/SiCo-Ops/cloud-go-sdk/aws"
 	"github.com/SiCo-Ops/cloud-go-sdk/qcloud"
 	"github.com/SiCo-Ops/dao/mongo"
 	"github.com/SiCo-Ops/public"
@@ -40,13 +42,23 @@ func (a *AssetService) SynchronizeRPC(ctx context.Context, in *pb.AssetSynchroni
 	case "aliyun":
 		switch in.Service {
 		case "ecs":
-			v := &aliyunSDK.Aliyun{}
+			v := &aliyunSDK.ECS{}
 			json.Unmarshal(in.Data, v)
 			for _, cloudResource := range v.Instances.Instance {
 				mongo.Insert(mongo.AssetConn, cloudResource, collection)
 			}
 			return &pb.AssetMsgBack{Code: 0, Msg: public.Int642String(v.TotalCount)}, nil
 		default:
+			return &pb.AssetMsgBack{Code: -1}, nil
+		}
+	case "aws":
+		switch in.Service {
+		case "ec2":
+			v := &awsSDK.EC2DescribeInstances{}
+			err := xml.Unmarshal(in.Data, v)
+			if err != nil {
+
+			}
 			return &pb.AssetMsgBack{Code: -1}, nil
 		}
 	default:
