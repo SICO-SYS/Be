@@ -55,9 +55,11 @@ func (a *AssetService) SynchronizeRPC(ctx context.Context, in *pb.AssetSynchroni
 		switch in.Service {
 		case "ec2":
 			v := &awsSDK.EC2DescribeInstances{}
-			err := xml.Unmarshal(in.Data, v)
-			if err != nil {
-
+			xml.Unmarshal(in.Data, v)
+			for _, reservation := range v.ReservationSet {
+				for _, instance := range reservation.InstancesSet {
+					mongo.Insert(mongo.AssetConn, instance, collection)
+				}
 			}
 			return &pb.AssetMsgBack{Code: -1}, nil
 		}
