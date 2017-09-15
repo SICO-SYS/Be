@@ -10,10 +10,6 @@ package controller
 
 import (
 	"golang.org/x/net/context"
-	// "io/ioutil"
-	// "net/http"
-	// "sort"
-	// "strings"
 
 	"github.com/SiCo-Ops/Pb"
 	"github.com/SiCo-Ops/dao/mongo"
@@ -28,8 +24,8 @@ func (t *TemplateService) CreateRPC(ctx context.Context, in *pb.AssetTemplateCal
 	data["name"] = in.Name
 	param := []map[string]string{in.Param}
 	data["param"] = param
-	mongo.TemplateEnsureIndexes(in.Id)
-	ok := mongo.Insert(mongo.AssetConn, data, c)
+	mongo.TemplateEnsureIndexes(assetDB, in.Id)
+	ok := mongo.Insert(assetDB, data, c)
 	if ok {
 		return &pb.AssetMsgBack{Code: 0}, nil
 	}

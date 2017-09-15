@@ -25,7 +25,7 @@ type AssetService struct{}
 
 func (a *AssetService) SynchronizeRPC(ctx context.Context, in *pb.AssetSynchronizeCall) (*pb.AssetMsgBack, error) {
 	collection := mongo.CollectionAssetCloudName(in.Cloud, in.Id)
-	mongo.Remove(mongo.AssetConn, collection)
+	mongo.Remove(assetDB, collection)
 	switch in.Cloud {
 	case "qcloud":
 		switch in.Service {
@@ -33,7 +33,7 @@ func (a *AssetService) SynchronizeRPC(ctx context.Context, in *pb.AssetSynchroni
 			v := &qcloudSDK.CVM{}
 			json.Unmarshal(in.Data, v)
 			for _, cloudResource := range v.Response.InstanceSet {
-				mongo.Insert(mongo.AssetConn, cloudResource, collection)
+				mongo.Insert(assetDB, cloudResource, collection)
 			}
 			return &pb.AssetMsgBack{Code: 0, Msg: public.Int642String(v.Response.TotalCount)}, nil
 		default:
@@ -45,7 +45,7 @@ func (a *AssetService) SynchronizeRPC(ctx context.Context, in *pb.AssetSynchroni
 			v := &aliyunSDK.ECS{}
 			json.Unmarshal(in.Data, v)
 			for _, cloudResource := range v.Instances.Instance {
-				mongo.Insert(mongo.AssetConn, cloudResource, collection)
+				mongo.Insert(assetDB, cloudResource, collection)
 			}
 			return &pb.AssetMsgBack{Code: 0, Msg: public.Int642String(v.TotalCount)}, nil
 		default:
@@ -58,7 +58,7 @@ func (a *AssetService) SynchronizeRPC(ctx context.Context, in *pb.AssetSynchroni
 			xml.Unmarshal(in.Data, v)
 			for _, reservation := range v.ReservationSet {
 				for _, instance := range reservation.InstancesSet {
-					mongo.Insert(mongo.AssetConn, instance, collection)
+					mongo.Insert(assetDB, instance, collection)
 				}
 			}
 			return &pb.AssetMsgBack{Code: -1}, nil
