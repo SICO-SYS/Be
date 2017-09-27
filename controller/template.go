@@ -9,6 +9,7 @@ Email:    sinerwr@gmail.com
 package controller
 
 import (
+	"encoding/json"
 	"golang.org/x/net/context"
 
 	"github.com/SiCo-Ops/Pb"
@@ -18,16 +19,21 @@ import (
 
 type TemplateService struct{}
 
-func (t *TemplateService) CreateRPC(ctx context.Context, in *pb.AssetTemplateCall) (*pb.AssetMsgBack, error) {
-	c := "template." + in.Id
+func (t *TemplateService) CreateRPC(ctx context.Context, in *pb.AssetTemplateCall) (*pb.AssetTemplateBack, error) {
+	c := mongo.CollectionTemplateName(in.Id)
 	data := make(map[string]interface{})
 	data["name"] = in.Name
-	param := []map[string]string{in.Param}
+	v := make(map[string]string)
+	json.Unmarshal(in.Params, &v)
+	param := []map[string]string{v}
 	data["param"] = param
-	mongo.TemplateEnsureIndexes(assetDB, in.Id)
-	ok := mongo.Insert(assetDB, data, c)
-	if ok {
-		return &pb.AssetMsgBack{Code: 0}, nil
+	err := mongo.TemplateEnsureIndexes(assetDB, in.Id)
+	if err != nil {
+		return &pb.AssetTemplateBack{Code: 203}, nil
 	}
-	return &pb.AssetMsgBack{Code: 1}, nil
+	err = mongo.Insert(assetDB, c, data)
+	if err != nil {
+		return &pb.AssetTemplateBack{Code: 203}, nil
+	}
+	return &pb.AssetTemplateBack{Code: 0}, nil
 }

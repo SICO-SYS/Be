@@ -18,14 +18,16 @@ import (
 	"github.com/SiCo-Ops/cloud-go-sdk/aws"
 	"github.com/SiCo-Ops/cloud-go-sdk/qcloud"
 	"github.com/SiCo-Ops/dao/mongo"
-	"github.com/SiCo-Ops/public"
 )
 
 type AssetService struct{}
 
-func (a *AssetService) SynchronizeRPC(ctx context.Context, in *pb.AssetSynchronizeCall) (*pb.AssetMsgBack, error) {
+func (a *AssetService) SynchronizeRPC(ctx context.Context, in *pb.AssetSynchronizeCall) (*pb.AssetSynchronizeBack, error) {
 	collection := mongo.CollectionAssetCloudName(in.Cloud, in.Id)
-	mongo.Remove(assetDB, collection)
+	err := mongo.Remove(assetDB, collection, nil)
+	if err != nil {
+		return &pb.AssetSynchronizeBack{Code: 203}, nil
+	}
 	switch in.Cloud {
 	case "qcloud":
 		switch in.Service {
@@ -33,11 +35,11 @@ func (a *AssetService) SynchronizeRPC(ctx context.Context, in *pb.AssetSynchroni
 			v := &qcloudSDK.CVM{}
 			json.Unmarshal(in.Data, v)
 			for _, cloudResource := range v.Response.InstanceSet {
-				mongo.Insert(assetDB, cloudResource, collection)
+				mongo.Insert(assetDB, collection, cloudResource)
 			}
-			return &pb.AssetMsgBack{Code: 0, Msg: public.Int642String(v.Response.TotalCount)}, nil
+			return &pb.AssetSynchronizeBack{Code: 0, TotalCount: v.Response.TotalCount}, nil
 		default:
-			return &pb.AssetMsgBack{Code: -1}, nil
+			return &pb.AssetSynchronizeBack{Code: 3000}, nil
 		}
 	case "aliyun":
 		switch in.Service {
@@ -45,11 +47,11 @@ func (a *AssetService) SynchronizeRPC(ctx context.Context, in *pb.AssetSynchroni
 			v := &aliyunSDK.ECS{}
 			json.Unmarshal(in.Data, v)
 			for _, cloudResource := range v.Instances.Instance {
-				mongo.Insert(assetDB, cloudResource, collection)
+				mongo.Insert(assetDB, collection, cloudResource)
 			}
-			return &pb.AssetMsgBack{Code: 0, Msg: public.Int642String(v.TotalCount)}, nil
+			return &pb.AssetSynchronizeBack{Code: 0, TotalCount: v.TotalCount}, nil
 		default:
-			return &pb.AssetMsgBack{Code: -1}, nil
+			return &pb.AssetSynchronizeBack{Code: 3000}, nil
 		}
 	case "aws":
 		switch in.Service {
@@ -58,17 +60,21 @@ func (a *AssetService) SynchronizeRPC(ctx context.Context, in *pb.AssetSynchroni
 			xml.Unmarshal(in.Data, v)
 			for _, reservation := range v.ReservationSet {
 				for _, instance := range reservation.InstancesSet {
-					mongo.Insert(assetDB, instance, collection)
+					mongo.Insert(assetDB, collection, instance)
 				}
 			}
-			return &pb.AssetMsgBack{Code: -1}, nil
+			if v.NextToken != "" {
+				return &pb.AssetSynchronizeBack{Code: 0, NextToken: v.NextToken}, nil
+			}
+			return &pb.AssetSynchronizeBack{Code: 0}, nil
+		default:
+			return &pb.AssetSynchronizeBack{Code: 3000}, nil
 		}
 	default:
-		return &pb.AssetMsgBack{Code: -1}, nil
+		return &pb.AssetSynchronizeBack{Code: 3000}, nil
 	}
-	return &pb.AssetMsgBack{Code: -1}, nil
 }
 
-func (a *AssetService) CustomRPC(ctx context.Context, in *pb.AssetCustomCall) (*pb.AssetMsgBack, error) {
-	return &pb.AssetMsgBack{Code: -1}, nil
+func (a *AssetService) CustomRPC(ctx context.Context, in *pb.AssetCustomizeCall) (*pb.AssetCustomizeBack, error) {
+	return &pb.AssetCustomizeBack{Code: 0}, nil
 }

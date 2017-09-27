@@ -11,6 +11,7 @@ package controller
 import (
 	"github.com/getsentry/raven-go"
 	"google.golang.org/grpc"
+	"log"
 
 	"github.com/SiCo-Ops/Pb"
 	"github.com/SiCo-Ops/cfg/v2"
@@ -20,9 +21,9 @@ import (
 
 var (
 	config              cfg.ConfigItems
-	configPool          = redis.Pool("", "", "")
+	configPool          = redis.NewPool()
 	RPCServer           = grpc.NewServer()
-	assetDB, assetDBErr = mongo.Dial("", "", "")
+	assetDB, assetDBErr = mongo.NewDial()
 )
 
 func ServePort() string {
@@ -39,16 +40,22 @@ func init() {
 		cfg.Unmarshal(data, &config)
 	}
 
-	configPool = redis.Pool(config.RedisConfigHost, config.RedisConfigPort, config.RedisConfigAuth)
-	configs, _ := redis.Hgetall(configPool, "system.config")
+	configPool = redis.InitPool(config.RedisConfigHost, config.RedisConfigPort, config.RedisConfigAuth)
+	configs, err := redis.Hgetall(configPool, "system.config")
+	if err != nil {
+		log.Fatalln(err)
+	}
 	cfg.Map2struct(configs, &config)
 
-	assetDB, assetDBErr = mongo.Dial(config.MongoAssetAddress, config.MongoAssetUsername, config.MongoAssetPassword)
+	assetDB, assetDBErr = mongo.InitDial(config.MongoAssetAddress, config.MongoAssetUsername, config.MongoAssetPassword)
+	if assetDBErr != nil {
+		log.Fatalln(assetDBErr)
+	}
 
 	pb.RegisterAssetServiceServer(RPCServer, &AssetService{})
 	pb.RegisterTemplateServiceServer(RPCServer, &TemplateService{})
 
-	if config.SentryHeStatus == "active" && config.SentryHeDSN != "" {
-		raven.SetDSN(config.SentryHeDSN)
+	if config.SentryBeStatus == "active" && config.SentryBeDSN != "" {
+		raven.SetDSN(config.SentryBeDSN)
 	}
 }
